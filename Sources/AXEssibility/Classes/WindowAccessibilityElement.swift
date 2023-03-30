@@ -3,7 +3,7 @@ import Cocoa
 private let kAXFullscreenAttribute = "AXFullScreen"
 
 public final class WindowAccessibilityElement: AccessibilityElement {
-  enum Action {
+  public enum Action {
     case raise
     case showMenu
     case pick
@@ -85,7 +85,8 @@ public final class WindowAccessibilityElement: AccessibilityElement {
 
   // MARK: Actions
 
-  func performAction(_ action: Action) -> Self {
+  @discardableResult
+  public func performAction(_ action: Action) -> Self {
     AXUIElementPerformAction(reference, action.rawValue as CFString)
     return self
   }
