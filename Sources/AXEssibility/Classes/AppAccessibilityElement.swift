@@ -27,8 +27,8 @@ public final class AppAccessibilityElement: AccessibilityElement {
     get { getWindow(for: .focusedWindow) }
   }
 
-  public var windows: [WindowAccessibilityElement] {
-    if let elements = try? value(.windows, as: [AXUIElement].self) {
+  public func windows() throws -> [WindowAccessibilityElement] {
+    if let elements = try value(.windows, as: [AXUIElement].self) {
       return elements.compactMap(WindowAccessibilityElement.init)
     } else {
       return []

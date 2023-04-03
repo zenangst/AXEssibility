@@ -9,6 +9,7 @@ AppAccessibilityElement
   .isFrontmost: \(debugValue(isFrontmost))
   .windows:\n
 """
+    let windows = (try? windows()) ?? []
     for window in windows {
       let lines = window.debugDescription.components(separatedBy: "\n")
       for line in lines {
