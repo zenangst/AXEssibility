@@ -5,6 +5,22 @@ extension AXUIElement {
     try rawValue(for: attribute.rawValue)
   }
 
+  public func findAttribute<T>(_ attribute: NSAccessibility.Attribute, of role: String) -> T? {
+    if let resolvedRole = try? (rawValue(for: kAXRoleAttribute) as? String), resolvedRole == role {
+      let result = try? rawValue(for: attribute.rawValue) as? T
+      return result
+    }
+
+    if let children = try? rawValue(for: kAXChildrenAttribute) as? [AXUIElement] {
+      for child in children {
+        if let result: T = child.findAttribute(attribute, of: role) {
+          return result
+        }
+      }
+    }
+    return nil
+  }
+
   internal func rawValue(for attribute: String) throws -> Any? {
     var rawValue: AnyObject?
     let cfString = attribute as CFString

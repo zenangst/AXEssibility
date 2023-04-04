@@ -78,7 +78,6 @@ public final class WindowAccessibilityElement: AccessibilityElement {
     }
   }
 
-
   public init(_ reference: AXUIElement) {
     self.reference = reference
   }

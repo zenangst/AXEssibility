@@ -32,6 +32,10 @@ extension AccessibilityElement {
     return Element(elementReference)
   }
 
+  public func findAttribute<T>(_ attribute: NSAccessibility.Attribute, of role: String) -> T? {
+    reference.findAttribute(attribute, of: role)
+  }
+
   // MARK: Internal methods
 
   internal func debugValue(_ value: Any?) -> String {
