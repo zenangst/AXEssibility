@@ -15,12 +15,15 @@ extension AccessibilityElement {
     try value(string, as: T.self)
   }
 
-  public func value<T>(_ attribute: NSAccessibility.Attribute, as type: T.Type) throws -> T? {
+  public func value<T>(_ attribute: NSAccessibility.Attribute, as type: T.Type) throws -> T {
     try value(attribute.rawValue, as: T.self)
   }
 
-  public func value<T>(_ attribute: String, as type: T.Type) throws -> T? {
-    try anyValue(attribute) as? T
+  public func value<T>(_ attribute: String, as type: T.Type) throws -> T {
+    if let anyValue =  try anyValue(attribute) as? T {
+      return anyValue
+    }
+    throw AccessibilityElementError.failedToCastAnyValue
   }
 
   public func element<Element: AccessibilityElement>(for attribute: NSAccessibility.Attribute) throws -> Element {
@@ -52,7 +55,7 @@ extension AccessibilityElement {
     try anyValue(attribute.rawValue)
   }
 
-  private func anyValue(_ attribute: String) throws -> Any? {
+  private func anyValue(_ attribute: String) throws -> Any {
     try reference.rawValue(for: attribute)
   }
 }

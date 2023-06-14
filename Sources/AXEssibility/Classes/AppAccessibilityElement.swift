@@ -19,20 +19,21 @@ public final class AppAccessibilityElement: AccessibilityElement {
     }
   }
 
-  public var mainWindow: WindowAccessibilityElement? {
-    get { getWindow(for: .mainWindow) }
+  public func mainWindow() throws -> WindowAccessibilityElement {
+    try getWindow(for: .mainWindow)
   }
 
-  public var focusedWindow: WindowAccessibilityElement? {
-    get { getWindow(for: .focusedWindow) }
+  public func focusedWindow() throws -> WindowAccessibilityElement {
+    try getWindow(for: .focusedWindow)
+  }
+
+  public func menuBar() throws -> MenuBarAccessibilityElement {
+    try getMenubar(for: .menuBar)
   }
 
   public func windows() throws -> [WindowAccessibilityElement] {
-    if let elements = try value(.windows, as: [AXUIElement].self) {
-      return elements.compactMap(WindowAccessibilityElement.init)
-    } else {
-      return []
-    }
+    try value(.windows, as: [AXUIElement].self)
+      .compactMap(WindowAccessibilityElement.init)
   }
 
   public init(_ reference: AXUIElement) {
@@ -60,10 +61,13 @@ public final class AppAccessibilityElement: AccessibilityElement {
 
   // MARK: Private methods
 
-  private func getWindow(for attribute: NSAccessibility.Attribute) -> WindowAccessibilityElement? {
-    if let element = try? value(attribute, as: AXUIElement.self) {
-      return WindowAccessibilityElement(element)
-    }
-    return nil
+  private func getWindow(for attribute: NSAccessibility.Attribute) throws -> WindowAccessibilityElement {
+    let element = try value(attribute, as: AXUIElement.self)
+    return WindowAccessibilityElement(element)
+  }
+
+  private func getMenubar(for attribute: NSAccessibility.Attribute) throws -> MenuBarAccessibilityElement {
+    let element = try value(attribute, as: AXUIElement.self)
+    return MenuBarAccessibilityElement(element)
   }
 }

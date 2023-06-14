@@ -21,7 +21,7 @@ extension AXUIElement {
     return nil
   }
 
-  internal func rawValue(for attribute: String) throws -> Any? {
+  internal func rawValue(for attribute: String) throws -> Any {
     var rawValue: AnyObject?
     let cfString = attribute as CFString
     let error = AXUIElementCopyAttributeValue(self, cfString, &rawValue)
@@ -31,7 +31,7 @@ extension AXUIElement {
     if let rawValue {
       return try unpack(rawValue)
     } else {
-      return nil
+      throw AccessibilityElementError.failedToFindRawValue
     }
   }
 
