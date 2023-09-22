@@ -73,8 +73,10 @@ public final class WindowAccessibilityElement: AccessibilityElement {
       return CGRect(origin: origin, size: size)
     }
     set {
-      position = newValue?.origin
-      size = newValue?.size
+      guard let newValue else { return }
+      let newFrame = CGRect(origin: newValue.origin, size: newValue.size)
+      position = newFrame.origin
+      size = newFrame.size
     }
   }
 

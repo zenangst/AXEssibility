@@ -4,6 +4,15 @@ import Cocoa
 public final class AppAccessibilityElement: AccessibilityElement {
   public private(set) var reference: AXUIElement
 
+  public var enhancedUserInterface: Bool? {
+    get { try? value(NSAccessibility.Attribute(rawValue: "AXEnhancedUserInterface")) }
+    set {
+      guard let newValue else { return }
+      let cfBoolean = newValue as CFBoolean
+      AXUIElementSetAttributeValue(reference, "AXEnhancedUserInterface" as CFString, cfBoolean)
+    }
+  }
+
   public var pid: Int32? {
     get { try? self.getPid() }
   }
