@@ -43,6 +43,10 @@ public final class WindowAccessibilityElement: AccessibilityElement {
     get { try? value(.title) }
   }
 
+  public var document: String? {
+    get { try? value(.document) }
+  }
+
   public var isMinimized: Bool? {
     get { try? value(.minimized) }
   }
