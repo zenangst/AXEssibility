@@ -1,9 +1,13 @@
 import Cocoa
 
-final class AnyAccessibilityElement: AccessibilityElement {
-  private(set) var reference: AXUIElement
+public final class AnyAccessibilityElement: AccessibilityElement {
+  public private(set) var reference: AXUIElement
 
-  init(_ reference: AXUIElement) {
+  public init(_ reference: AXUIElement) {
     self.reference = reference
+  }
+
+  public func selectedText() -> String? {
+    try? value(.selectedText)
   }
 }

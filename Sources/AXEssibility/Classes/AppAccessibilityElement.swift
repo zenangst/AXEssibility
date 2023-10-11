@@ -36,6 +36,11 @@ public final class AppAccessibilityElement: AccessibilityElement {
     try getWindow(for: .focusedWindow)
   }
 
+  public func focusedUIElement() throws -> AnyAccessibilityElement {
+    let element = try value(.focusedUIElement, as: AXUIElement.self)
+    return AnyAccessibilityElement(element)
+  }
+
   public func menuBar() throws -> MenuBarAccessibilityElement {
     try getMenubar(for: .menuBar)
   }
