@@ -35,6 +35,15 @@ extension AXUIElement {
     }
   }
 
+  public func parameterizedValue<T>(key: String, parameters: AnyObject, as _: T.Type) throws -> T {
+    var value: AnyObject?
+    let error = AXUIElementCopyParameterizedAttributeValue(self, key as CFString, parameters as CFTypeRef, &value)
+    if error == .success, let value = value as? T {
+      return value
+    }
+    throw error
+  }
+
   private func unpack(_ value: AnyObject) throws -> Any {
     switch CFGetTypeID(value) {
     case AXUIElementGetTypeID():
