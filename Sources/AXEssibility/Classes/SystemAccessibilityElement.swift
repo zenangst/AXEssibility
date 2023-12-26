@@ -16,4 +16,13 @@ public final class SystemAccessibilityElement: AccessibilityElement {
     let element = try value(.focusedUIElement, as: AXUIElement.self)
     return AnyFocusedAccessibilityElement(element)
   }
+
+  public func element<T: AccessibilityElement>(at location: CGPoint, as: T.Type) -> T? {
+    var matchingReference: AXUIElement?
+    AXUIElementCopyElementAtPosition(reference, Float(location.x), Float(location.y), &matchingReference)
+    if let matchingReference = matchingReference {
+      return T(matchingReference)
+    }
+    return nil
+  }
 }
