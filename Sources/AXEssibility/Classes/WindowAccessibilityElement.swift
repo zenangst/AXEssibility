@@ -26,7 +26,7 @@ public final class WindowAccessibilityElement: AccessibilityElement {
   public private(set) var reference: AXUIElement
 
   public var id: CGWindowID {
-    var windowID:CGWindowID = 0
+    var windowID: CGWindowID = 0
     _AXUIElementGetWindow(reference, &windowID)
     return windowID
   }
