@@ -14,6 +14,10 @@ extension AXValue {
   internal static func from<T>(value: T, type: AXValueType) -> AXValue? {
     let pointer = UnsafeMutablePointer<T>.allocate(capacity: 1)
     pointer.pointee = value
+    defer {
+      pointer.deinitialize(count: 1)
+      pointer.deallocate()
+    }
     return AXValueCreate(type, pointer)
   }
 }
