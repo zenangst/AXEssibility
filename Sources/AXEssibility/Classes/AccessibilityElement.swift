@@ -78,6 +78,21 @@ extension AccessibilityElement {
 
   // MARK: Private methods
 
+  private func findParent<T: AccessibilityElement>(with role: NSAccessibility.Attribute, as type: T.Type) -> T? {
+    var element: AccessibilityElement? = self
+    while element != nil, element?.role != role.rawValue {
+      if let nextElement: AccessibilityElement = element?.parent {
+        element = nextElement
+      } else {
+        element = nil
+      }
+    }
+    if let element {
+      return T(element.reference)
+    }
+    return nil
+  }
+
   private func anyValue(_ attribute: NSAccessibility.Attribute) throws -> Any? {
     try anyValue(attribute.rawValue)
   }
