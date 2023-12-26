@@ -7,6 +7,16 @@ public protocol AccessibilityElement {
 }
 
 extension AccessibilityElement {
+  public var window: WindowAccessibilityElement? {
+    if role == kAXWindowRole {
+      return WindowAccessibilityElement(reference)
+    } else {
+      return findParent(with: .window, as: WindowAccessibilityElement.self)
+    }
+  }
+  public var parent: AnyAccessibilityElement? { return try? element(for: .parent) }
+  public var role: String? { return try? value(.role, as: String.self) }
+
   public func value<T>(_ attribute: NSAccessibility.Attribute) throws -> T? {
     try value(attribute.rawValue, as: T.self)
   }
