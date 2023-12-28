@@ -1,4 +1,4 @@
-public enum PermissionsItemStatus: String {
+public enum AccessibilityPermissionsItemStatus: String {
   case request = "Request"
   case approved = "Approved"
   case pending = "Pending"

@@ -15,7 +15,7 @@ public final class AccessibilityPermission: ObservableObject {
 
   private var timer: AnyCancellable?
   private var runningApplicationSubscription: AnyCancellable?
-  @Published public private(set) var viewModel: PermissionsItemStatus = .request
+  @Published public private(set) var viewModel: AccessibilityPermissionsItemStatus = .request
   @Published public private(set) var permission: Permission = .notDetermined
 
   init() {
