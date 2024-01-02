@@ -7,6 +7,14 @@ public protocol AccessibilityElement {
 }
 
 extension AccessibilityElement {
+  public var app: AppAccessibilityElement? {
+    if role == kAXApplicationRole {
+      return AppAccessibilityElement(reference)
+    } else {
+      return findParent(with: kAXApplicationRole, as: AppAccessibilityElement.self)
+    }
+  }
+
   public var window: WindowAccessibilityElement? {
     if role == kAXWindowRole {
       return WindowAccessibilityElement(reference)
@@ -14,6 +22,7 @@ extension AccessibilityElement {
       return findParent(with: .window, as: WindowAccessibilityElement.self)
     }
   }
+
   public var parent: AnyAccessibilityElement? { return try? element(for: .parent) }
   public var role: String? { return try? value(.role, as: String.self) }
 
@@ -89,8 +98,12 @@ extension AccessibilityElement {
   // MARK: Private methods
 
   private func findParent<T: AccessibilityElement>(with role: NSAccessibility.Attribute, as type: T.Type) -> T? {
+    findParent(with: role.rawValue, as: type)
+  }
+
+  private func findParent<T: AccessibilityElement>(with role: String, as type: T.Type) -> T? {
     var element: AccessibilityElement? = self
-    while element != nil, element?.role != role.rawValue {
+    while element != nil, element?.role != role {
       if let nextElement: AccessibilityElement = element?.parent {
         element = nextElement
       } else {
@@ -102,6 +115,7 @@ extension AccessibilityElement {
     }
     return nil
   }
+
 
   private func anyValue(_ attribute: NSAccessibility.Attribute) throws -> Any? {
     try anyValue(attribute.rawValue)
