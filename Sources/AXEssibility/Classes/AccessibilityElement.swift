@@ -23,8 +23,20 @@ extension AccessibilityElement {
     }
   }
 
+  public var identifier: String? { return try? value(.identifier) }
   public var parent: AnyAccessibilityElement? { return try? element(for: .parent) }
+  public var children: [any AccessibilityElement] {
+    let results = (try? value(.children, as: [AXUIElement].self)) ?? []
+    return results
+      .map { element in
+        AnyAccessibilityElement(element)
+      }
+}
   public var role: String? { return try? value(.role, as: String.self) }
+  public var description: String? { return try? value(.description, as: String.self) }
+  public var roleDescription: String? { return try? value(.roleDescription, as: String.self) }
+  public var value: String? { return try? value(.value, as: String.self) }
+  public var title: String? { return try? value(.title, as: String.self) }
 
   public func value<T>(_ attribute: NSAccessibility.Attribute) throws -> T? {
     try value(attribute.rawValue, as: T.self)
@@ -83,6 +95,20 @@ extension AccessibilityElement {
       position = newFrame.origin
       size = newFrame.size
     }
+  }
+
+  public func findChild(matching: (AccessibilityElement?) -> Bool) -> AnyAccessibilityElement? {
+    if matching(self) {
+      return AnyAccessibilityElement(self.reference)
+    }
+
+    for child in self.children {
+      if let found = child.findChild(matching: matching) {
+        return found
+      }
+    }
+
+    return nil
   }
 
   // MARK: Internal methods
