@@ -2,8 +2,9 @@ import Cocoa
 
 public protocol AccessibilityElement {
   var reference: AXUIElement { get }
+  var messagingTimeout: Float? { get }
 
-  init(_ reference: AXUIElement)
+  init(_ reference: AXUIElement, messagingTimeout: Float?)
 }
 
 extension AccessibilityElement {
@@ -17,7 +18,7 @@ extension AccessibilityElement {
 
   public var window: WindowAccessibilityElement? {
     if role == kAXWindowRole {
-      return WindowAccessibilityElement(reference)
+      return WindowAccessibilityElement(reference, messagingTimeout: messagingTimeout)
     } else {
       return findParent(with: .window, as: WindowAccessibilityElement.self)
     }
@@ -57,13 +58,18 @@ extension AccessibilityElement {
     throw AccessibilityElementError.failedToCastAnyValue
   }
 
-  public func element<Element: AccessibilityElement>(for attribute: NSAccessibility.Attribute) throws -> Element {
+  public func element<Element: AccessibilityElement>(for attribute: NSAccessibility.Attribute, messagingTimeout: Float? = nil) throws -> Element {
     guard let rawValue = try reference.rawValue(for: attribute) else {
       throw AccessibilityElementError.unableToCreateRawValue
     }
 
     let elementReference = rawValue as! AXUIElement
-    return Element(elementReference)
+
+    if let messagingTimeout {
+      AXUIElementSetMessagingTimeout(elementReference, messagingTimeout)
+    }
+
+    return Element(elementReference, messagingTimeout: messagingTimeout)
   }
 
   public func findAttribute<T>(_ attribute: NSAccessibility.Attribute, of role: String) -> T? {
@@ -97,13 +103,19 @@ extension AccessibilityElement {
     }
   }
 
-  public func findChild(matching: (AccessibilityElement?) -> Bool) -> AnyAccessibilityElement? {
-    if matching(self) {
+  public func findChild(matching: (_ element: AccessibilityElement?, _ abort: inout Bool) -> Bool) -> AnyAccessibilityElement? {
+    var abort: Bool = false
+    if matching(self, &abort) {
       return AnyAccessibilityElement(self.reference)
     }
 
+    if abort { return nil }
+
     for child in self.children {
+      if abort { break }
+
       if let found = child.findChild(matching: matching) {
+        if abort { return nil }
         return found
       }
     }
@@ -137,7 +149,7 @@ extension AccessibilityElement {
       }
     }
     if let element {
-      return T(element.reference)
+      return T(element.reference, messagingTimeout: messagingTimeout)
     }
     return nil
   }
@@ -149,6 +161,12 @@ extension AccessibilityElement {
 
   private func anyValue(_ attribute: String) throws -> Any {
     try reference.rawValue(for: attribute)
+  }
+
+  func setMessagingTimeoutIfNeeded(for reference: AXUIElement) {
+    if let messagingTimeout {
+      AXUIElementSetMessagingTimeout(reference, messagingTimeout)
+    }
   }
 
   // MARK: Actions

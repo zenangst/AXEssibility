@@ -3,6 +3,7 @@ import Cocoa
 
 public final class AppAccessibilityElement: AccessibilityElement {
   public private(set) var reference: AXUIElement
+  public let messagingTimeout: Float?
 
   public var enhancedUserInterface: Bool? {
     get { try? value(NSAccessibility.Attribute(rawValue: "AXEnhancedUserInterface")) }
@@ -47,15 +48,18 @@ public final class AppAccessibilityElement: AccessibilityElement {
 
   public func windows() throws -> [WindowAccessibilityElement] {
     try value(.windows, as: [AXUIElement].self)
-      .compactMap(WindowAccessibilityElement.init)
+      .compactMap { WindowAccessibilityElement.init($0, messagingTimeout: messagingTimeout) }
   }
 
-  public init(_ reference: AXUIElement) {
+  public init(_ reference: AXUIElement, messagingTimeout: Float? = nil) {
     self.reference = reference
+    self.messagingTimeout = messagingTimeout
   }
 
-  public init(_ pid: pid_t) {
+  public init(_ pid: pid_t, messagingTimeout: Float? = nil) {
     self.reference = AXUIElementCreateApplication(pid)
+    self.messagingTimeout = messagingTimeout
+    setMessagingTimeoutIfNeeded(for: reference)
   }
 
   public static func focusedApplication() -> AppAccessibilityElement? {
@@ -77,11 +81,11 @@ public final class AppAccessibilityElement: AccessibilityElement {
 
   private func getWindow(for attribute: NSAccessibility.Attribute) throws -> WindowAccessibilityElement {
     let element = try value(attribute, as: AXUIElement.self)
-    return WindowAccessibilityElement(element)
+    return WindowAccessibilityElement(element, messagingTimeout: messagingTimeout)
   }
 
   private func getMenubar(for attribute: NSAccessibility.Attribute) throws -> MenuBarAccessibilityElement {
     let element = try value(attribute, as: AXUIElement.self)
-    return MenuBarAccessibilityElement(element)
+    return MenuBarAccessibilityElement(element, messagingTimeout: messagingTimeout)
   }
 }

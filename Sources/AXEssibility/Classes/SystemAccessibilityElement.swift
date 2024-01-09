@@ -3,26 +3,27 @@ import Cocoa
 public final class SystemAccessibilityElement: AccessibilityElement {
   
   public private(set) var reference: AXUIElement
+  public let messagingTimeout: Float?
 
-  public init(_ reference: AXUIElement = AXUIElementCreateSystemWide()) {
+  public init(_ reference: AXUIElement = AXUIElementCreateSystemWide(), messagingTimeout: Float? = nil) {
     self.reference = reference
+    self.messagingTimeout = messagingTimeout
+    setMessagingTimeoutIfNeeded(for: reference)
   }
 
-  public init() {
-    self.reference = AXUIElementCreateSystemWide()
-  }
-
-  public func focusedUIElement() throws -> AnyFocusedAccessibilityElement {
+  public func focusedUIElement(_ messagingTimeout: Float? = nil) throws -> AnyFocusedAccessibilityElement {
     let element = try value(.focusedUIElement, as: AXUIElement.self)
     return AnyFocusedAccessibilityElement(element)
   }
 
-  public func element<T: AccessibilityElement>(at location: CGPoint, as: T.Type) -> T? {
+  public func element<T: AccessibilityElement>(at location: CGPoint, 
+                                               as: T.Type) -> T? {
     var matchingReference: AXUIElement?
     AXUIElementCopyElementAtPosition(reference, Float(location.x), Float(location.y), &matchingReference)
-    if let matchingReference = matchingReference {
-      return T(matchingReference)
+    if let matchingReference {
+      return T(matchingReference, messagingTimeout: messagingTimeout)
     }
     return nil
   }
+
 }
