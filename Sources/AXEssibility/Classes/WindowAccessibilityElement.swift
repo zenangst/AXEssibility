@@ -85,7 +85,7 @@ public final class WindowAccessibilityElement: AccessibilityElement {
     }
   }
 
-  public init(_ reference: AXUIElement, messagingTimeout: Float?) {
+  public init(_ reference: AXUIElement, messagingTimeout: Float? = nil) {
     self.reference = reference
     self.messagingTimeout = messagingTimeout
     setMessagingTimeoutIfNeeded(for: reference)
