@@ -103,8 +103,7 @@ extension AccessibilityElement {
     }
   }
 
-  public func findChild(matching: (_ element: AccessibilityElement?, _ abort: inout Bool) -> Bool) -> AnyAccessibilityElement? {
-    var abort: Bool = false
+  public func findChild(matching: (_ element: AccessibilityElement?, _ abort: inout Bool) -> Bool, abort: inout Bool) -> AnyAccessibilityElement? {
     if matching(self, &abort) {
       return AnyAccessibilityElement(self.reference)
     }
@@ -114,13 +113,49 @@ extension AccessibilityElement {
     for child in self.children {
       if abort { break }
 
-      if let found = child.findChild(matching: matching) {
+      if let found = child.findChild(matching: matching, abort: &abort) {
         if abort { return nil }
         return found
       }
     }
 
     return nil
+  }
+
+  public func findChildren(
+    screen: NSScreen,
+    matchingConditions: inout [Int: (_ element: AnyAccessibilitySubject, _ abort: inout Bool) -> Bool],
+    abort: inout Bool
+  ) -> [Int: AnyAccessibilitySubject] {
+    guard !abort else { return [:] }
+
+    var results: [Int: AnyAccessibilitySubject] = [:]
+    for (index, condition) in matchingConditions {
+      if abort { break }
+
+      guard let elementFrame = self.frame else { continue }
+
+      let convertedFrame = screen.convertRectFromBacking(elementFrame)
+      let position = elementFrame.origin
+
+      guard convertedFrame.intersects(screen.frame) else { continue }
+
+      let subject = AnyAccessibilitySubject(element: AnyAccessibilityElement(self.reference), position: position)
+      if condition(subject, &abort) {
+        results[index] = subject
+        matchingConditions[index] = nil
+      } else if !matchingConditions.isEmpty {
+        for child in self.children {
+          if abort { break }
+          let childResults = child.findChildren(screen: screen, matchingConditions: &matchingConditions, abort: &abort)
+          for (index, result) in childResults {
+            results[index] = result
+          }
+        }
+      }
+    }
+
+    return results
   }
 
   // MARK: Internal methods
@@ -176,4 +211,9 @@ extension AccessibilityElement {
     AXUIElementPerformAction(reference, action.rawValue as CFString)
     return self
   }
+}
+
+public struct AnyAccessibilitySubject {
+  public let element: AnyAccessibilityElement
+  public let position: CGPoint
 }
