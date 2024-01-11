@@ -1,6 +1,6 @@
 import Cocoa
 
-public protocol AccessibilityElement {
+public protocol AccessibilityElement: AnyObject {
   var reference: AXUIElement { get }
   var messagingTimeout: Float? { get }
 
@@ -58,6 +58,30 @@ extension AccessibilityElement {
     throw AccessibilityElementError.failedToCastAnyValue
   }
 
+  public func values(_ attributes: [NSAccessibility.Attribute]) throws -> [NSAccessibility.Attribute: Any] {
+    let cfAttributes = (attributes.map { $0.rawValue as CFString }) as CFArray
+    var values: CFArray?
+    let code = AXUIElementCopyMultipleAttributeValues(
+      reference,
+      cfAttributes,
+      AXCopyMultipleAttributeOptions(),
+      &values
+    )
+
+    guard code == .success else { throw AXError.failure }
+
+    guard let values = values as? [AnyObject] else { throw AXError.cannotComplete }
+
+    guard values.count == attributes.count else { throw AXError.cannotComplete }
+
+    var result = [NSAccessibility.Attribute: Any]()
+    for (index, value) in values.enumerated() {
+      result[attributes[index]] = try? reference.unpack(value)
+    }
+
+    return result
+  }
+
   public func element<Element: AccessibilityElement>(for attribute: NSAccessibility.Attribute, messagingTimeout: Float? = nil) throws -> Element {
     guard let rawValue = try reference.rawValue(for: attribute) else {
       throw AccessibilityElementError.unableToCreateRawValue
@@ -92,7 +116,10 @@ extension AccessibilityElement {
 
   public var frame: CGRect? {
     get {
-      guard let origin = position, let size = size else { return nil }
+      guard let array = try? values([.position, .size]),
+            let origin = array[.position] as? CGPoint,
+            let size = array[.size] as? CGSize else { return nil }
+
       return CGRect(origin: origin, size: size)
     }
     set {

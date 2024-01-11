@@ -56,35 +56,6 @@ public final class WindowAccessibilityElement: AccessibilityElement {
     get { try? value(kAXFullscreenAttribute)  }
   }
 
-  // MARK: Getters & Setters
-
-  public var position: CGPoint? {
-    get { return try? value(.position) }
-    set { guard let value = AXValue.from(value: newValue, type: .cgPoint) else { return }
-      AXUIElementSetAttributeValue(reference, kAXPositionAttribute as CFString, value)
-    }
-  }
-
-  public var size: CGSize? {
-    get { return try? value(.size) }
-    set { guard let value = AXValue.from(value: newValue, type: .cgSize) else { return }
-      AXUIElementSetAttributeValue(reference, kAXSizeAttribute as CFString, value)
-    }
-  }
-
-  public var frame: CGRect? {
-    get {
-      guard let origin = position, let size = size else { return nil }
-      return CGRect(origin: origin, size: size)
-    }
-    set {
-      guard let newValue else { return }
-      let newFrame = CGRect(origin: newValue.origin, size: newValue.size)
-      position = newFrame.origin
-      size = newFrame.size
-    }
-  }
-
   public init(_ reference: AXUIElement, messagingTimeout: Float? = nil) {
     self.reference = reference
     self.messagingTimeout = messagingTimeout

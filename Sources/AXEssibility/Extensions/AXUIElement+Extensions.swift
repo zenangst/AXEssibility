@@ -44,7 +44,7 @@ extension AXUIElement {
     throw error
   }
 
-  private func unpack(_ value: AnyObject) throws -> Any {
+  func unpack(_ value: AnyObject) throws -> Any {
     switch CFGetTypeID(value) {
     case AXUIElementGetTypeID():
       return value as! AXUIElement
