@@ -130,9 +130,9 @@ extension AccessibilityElement {
     }
   }
 
-  public func findChild(matching: (_ element: AccessibilityElement?, _ abort: inout Bool) -> Bool, abort: inout Bool) -> AnyAccessibilityElement? {
+  public func findChild(matching: (_ element: AccessibilityElement?, _ abort: inout Bool) -> Bool, abort: inout Bool) -> AccessibilityElement? {
     if matching(self, &abort) {
-      return AnyAccessibilityElement(self.reference)
+      return self
     }
 
     if abort { return nil }
@@ -149,40 +149,41 @@ extension AccessibilityElement {
     return nil
   }
 
-  public func findChildren(
-    screen: NSScreen,
-    matchingConditions: inout [Int: (_ element: AnyAccessibilitySubject, _ abort: inout Bool) -> Bool],
-    abort: inout Bool
-  ) -> [Int: AnyAccessibilitySubject] {
-    guard !abort else { return [:] }
+  public func findChild(
+    on screen: NSScreen,
+    keys: Set<NSAccessibility.Attribute>,
+    abort: @escaping () -> Bool,
+    matching: (_ values: [NSAccessibility.Attribute: Any]) -> Bool
+  ) -> AnyAccessibilitySubject? {
+    if abort() == true { return nil }
 
-    var results: [Int: AnyAccessibilitySubject] = [:]
-    for (index, condition) in matchingConditions {
-      if abort { break }
+    var keys = keys
+    keys.insert(.position)
+    keys.insert(.size)
 
-      guard let elementFrame = self.frame else { continue }
+    guard let values = try? self.values(Array(keys)),
+          let origin = values[.position] as? CGPoint,
+          let size = values[.size] as? CGSize else {
+      return nil
+    }
 
-      let convertedFrame = screen.convertRectFromBacking(elementFrame)
-      let position = elementFrame.origin
+    let elementFrame = CGRect(origin: origin, size: size)
+    let convertedFrame = screen.convertRectFromBacking(elementFrame)
+    guard convertedFrame.intersects(screen.frame) else { return nil }
 
-      guard convertedFrame.intersects(screen.frame) else { continue }
-
-      let subject = AnyAccessibilitySubject(element: AnyAccessibilityElement(self.reference), position: position)
-      if condition(subject, &abort) {
-        results[index] = subject
-        matchingConditions[index] = nil
-      } else if !matchingConditions.isEmpty {
-        for child in self.children {
-          if abort { break }
-          let childResults = child.findChildren(screen: screen, matchingConditions: &matchingConditions, abort: &abort)
-          for (index, result) in childResults {
-            results[index] = result
-          }
-        }
+    if matching(values) {
+      return AnyAccessibilitySubject(element: self, position: elementFrame.origin)
+    }
+    for child in self.children {
+      if abort() == true { break }
+      if let match = child.findChild(on: screen, keys: keys,
+                                     abort: abort,
+                                     matching: matching) {
+        return match
       }
     }
 
-    return results
+    return nil
   }
 
   // MARK: Internal methods
@@ -241,6 +242,6 @@ extension AccessibilityElement {
 }
 
 public struct AnyAccessibilitySubject {
-  public let element: AnyAccessibilityElement
+  public let element: AccessibilityElement
   public let position: CGPoint
 }
