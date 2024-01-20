@@ -50,6 +50,14 @@ public final class WindowAccessibilityElement: AccessibilityElement {
 
   public var isMinimized: Bool? {
     get { try? value(.minimized) }
+    set {
+      guard let newValue else { return  }
+      AXUIElementSetAttributeValue(
+        reference,
+        kAXMinimizedAttribute as CFString,
+        newValue as CFTypeRef
+      )
+    }
   }
 
   public var isFullscreen: Bool? {
