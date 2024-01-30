@@ -59,7 +59,8 @@ extension AccessibilityElement {
   }
 
   public func values(_ attributes: [NSAccessibility.Attribute]) throws -> [NSAccessibility.Attribute: Any] {
-    let cfAttributes = (attributes.map { $0.rawValue as CFString }) as CFArray
+    let uniqueAttributes = Array(Set(attributes))
+    let cfAttributes = (uniqueAttributes.map { $0.rawValue as CFString }) as CFArray
     var values: CFArray?
     let code = AXUIElementCopyMultipleAttributeValues(
       reference,
@@ -72,11 +73,12 @@ extension AccessibilityElement {
 
     guard let values = values as? [AnyObject] else { throw AXError.cannotComplete }
 
-    guard values.count == attributes.count else { throw AXError.cannotComplete }
+    guard values.count == uniqueAttributes.count else { throw AXError.cannotComplete }
 
-    var result = [NSAccessibility.Attribute: Any]()
+    var result = [NSAccessibility.Attribute: Any](minimumCapacity: uniqueAttributes.count)
+
     for (index, value) in values.enumerated() {
-      result[attributes[index]] = try? reference.unpack(value)
+      result[uniqueAttributes[index]] = try? reference.unpack(value)
     }
 
     return result
@@ -151,34 +153,50 @@ extension AccessibilityElement {
 
   public func findChild(
     on screen: NSScreen,
+    parentFrame: CGRect? = nil,
     keys: Set<NSAccessibility.Attribute>,
     abort: @escaping () -> Bool,
     matching: (_ values: [NSAccessibility.Attribute: Any]) -> Bool
   ) -> AnyAccessibilitySubject? {
+    var parentFrame: CGRect? = parentFrame
     if abort() == true { return nil }
 
     var keys = keys
     keys.insert(.position)
     keys.insert(.size)
+    keys.insert(.role)
+    keys.insert(.children)
+    keys.insert(.description)
 
-    guard let values = try? self.values(Array(keys)),
-          let origin = values[.position] as? CGPoint,
-          let size = values[.size] as? CGSize else {
+    guard
+      let values = try? self.values(Array(keys)),
+      let role = values[.role] as? String,
+      let origin = values[.position] as? CGPoint,
+      let size = values[.size] as? CGSize,
+      let children = values[.children] as? [AXUIElement] else {
       return nil
     }
 
-    let elementFrame = CGRect(origin: origin, size: size)
-    let convertedFrame = screen.convertRectFromBacking(elementFrame)
-    guard convertedFrame.intersects(screen.frame) else { return nil }
+    let frame = CGRect(origin: origin, size: size)
+    if role == "AXScrollArea" { parentFrame = frame }
 
-    if matching(values) {
+    let elementFrame = CGRect(origin: origin, size: size)
+
+    if let parentFrame = parentFrame,
+       parentFrame.intersects(elementFrame) {
+      if matching(values) {
+        return AnyAccessibilitySubject(element: self, position: elementFrame.origin)
+      }
+    } else if matching(values) {
       return AnyAccessibilitySubject(element: self, position: elementFrame.origin)
     }
-    for child in self.children {
+
+    let elements = children.map { AnyAccessibilityElement($0) }
+    for element in elements {
       if abort() == true { break }
-      if let match = child.findChild(on: screen, keys: keys,
-                                     abort: abort,
-                                     matching: matching) {
+
+      if let match = element.findChild(on: screen, parentFrame: parentFrame,
+                                       keys: keys, abort: abort, matching: matching) {
         return match
       }
     }
@@ -244,4 +262,43 @@ extension AccessibilityElement {
 public struct AnyAccessibilitySubject {
   public let element: AccessibilityElement
   public let position: CGPoint
+}
+
+fileprivate extension NSScreen {
+  // Different from `NSScreen.main`, the `mainDisplay` sets the conditions for the
+  // coordinate system. All other screens have a coordinate space that is relative
+  // to the main screen.
+  var isMainDisplay: Bool { frame.origin == .zero }
+  static var mainDisplay: NSScreen? { screens.first(where: { $0.isMainDisplay }) }
+
+  static func screenContaining(_ rect: CGRect) -> NSScreen? {
+    NSScreen.screens.first(where: { $0.frame.contains(rect) })
+  }
+
+  static var maxY: CGFloat {
+    var maxY = 0.0 as CGFloat
+    for screen in screens {
+      maxY = CGFloat.maximum(screen.frame.maxY, maxY)
+    }
+    return maxY
+  }
+}
+
+extension AccessibilityElement {
+  public func isElementFrameVisible(on screen: NSScreen) -> Bool {
+    var currentElement: AccessibilityElement? = self
+    var globalFrame = self.frame ?? .zero
+
+    while let parent = currentElement?.parent {
+      if let parentFrame = parent.frame {
+        // Convert the frame from the local coordinate system to the parent's coordinate system
+        globalFrame = globalFrame.offsetBy(dx: parentFrame.origin.x, dy: parentFrame.origin.y)
+      }
+      currentElement = parent.app != nil ? nil : parent // Stop if we reach the app element
+    }
+
+    // Now globalFrame is in screen coordinates (assuming the top-level window is aligned with the screen origin)
+    // Check if the frame is within the screen's visible frame
+    return screen.visibleFrame.intersects(globalFrame)
+  }
 }
