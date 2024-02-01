@@ -29,10 +29,9 @@ extension AccessibilityElement {
   public var children: [any AccessibilityElement] {
     let results = (try? value(.children, as: [AXUIElement].self)) ?? []
     return results
-      .map { element in
-        AnyAccessibilityElement(element)
-      }
-}
+      .map { AnyAccessibilityElement($0) }
+  }
+
   public var role: String? { return try? value(.role, as: String.self) }
   public var description: String? { return try? value(.description, as: String.self) }
   public var roleDescription: String? { return try? value(.roleDescription, as: String.self) }
@@ -158,22 +157,20 @@ extension AccessibilityElement {
     abort: @escaping () -> Bool,
     matching: (_ values: [NSAccessibility.Attribute: Any]) -> Bool
   ) -> AnyAccessibilitySubject? {
-    var parentFrame: CGRect? = parentFrame
     if abort() == true { return nil }
+    var parentFrame = parentFrame
 
     var keys = keys
     keys.insert(.position)
     keys.insert(.size)
     keys.insert(.role)
-    keys.insert(.children)
     keys.insert(.description)
 
-    guard
-      let values = try? self.values(Array(keys)),
-      let role = values[.role] as? String,
-      let origin = values[.position] as? CGPoint,
-      let size = values[.size] as? CGSize,
-      let children = values[.children] as? [AXUIElement] else {
+    guard let values = try? self.values(Array(keys)) else { return nil }
+
+    guard let role = values[.role] as? String,
+          let origin = values[.position] as? CGPoint,
+          let size = values[.size] as? CGSize else {
       return nil
     }
 
@@ -191,8 +188,7 @@ extension AccessibilityElement {
       return AnyAccessibilitySubject(element: self, position: elementFrame.origin)
     }
 
-    let elements = children.map { AnyAccessibilityElement($0) }
-    for element in elements {
+    for element in children {
       if abort() == true { break }
 
       if let match = element.findChild(on: screen, parentFrame: parentFrame,
