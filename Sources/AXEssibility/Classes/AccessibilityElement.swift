@@ -115,6 +115,10 @@ extension AccessibilityElement {
     }
   }
 
+  public var subrole: String? {
+    get { return try? value(.subrole) }
+  }
+
   public var frame: CGRect? {
     get {
       guard let array = try? values([.position, .size]),
