@@ -10,7 +10,7 @@ public protocol AccessibilityElement: AnyObject {
 extension AccessibilityElement {
   public var app: AppAccessibilityElement? {
     if role == kAXApplicationRole {
-      return AppAccessibilityElement(reference)
+      return AppAccessibilityElement(reference, messagingTimeout: messagingTimeout)
     } else {
       return findParent(with: kAXApplicationRole, as: AppAccessibilityElement.self)
     }
@@ -103,14 +103,16 @@ extension AccessibilityElement {
 
   public var position: CGPoint? {
     get { return try? value(.position) }
-    set { guard let value = AXValue.from(value: newValue, type: .cgPoint) else { return }
+    set { guard let newPoint = newValue,
+                let value = AXValue.from(value: newPoint, type: .cgPoint) else { return }
       AXUIElementSetAttributeValue(reference, kAXPositionAttribute as CFString, value)
     }
   }
 
   public var size: CGSize? {
     get { return try? value(.size) }
-    set { guard let value = AXValue.from(value: newValue, type: .cgSize) else { return }
+    set { guard let newSize = newValue,
+                let value = AXValue.from(value: newSize, type: .cgSize) else { return }
       AXUIElementSetAttributeValue(reference, kAXSizeAttribute as CFString, value)
     }
   }
@@ -124,14 +126,18 @@ extension AccessibilityElement {
       guard let array = try? values([.position, .size]),
             let origin = array[.position] as? CGPoint,
             let size = array[.size] as? CGSize else { return nil }
-
       return CGRect(origin: origin, size: size)
     }
     set {
       guard let newValue else { return }
       let newFrame = CGRect(origin: newValue.origin, size: newValue.size)
-      position = newFrame.origin
-      size = newFrame.size
+
+      if let value = AXValue.from(value: newFrame.origin, type: .cgPoint) {
+        AXUIElementSetAttributeValue(reference, kAXPositionAttribute as CFString, value)
+      }
+      if let value = AXValue.from(value: newFrame.size, type: .cgSize) {
+        AXUIElementSetAttributeValue(reference, kAXSizeAttribute as CFString, value)
+      }
     }
   }
 
