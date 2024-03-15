@@ -1,6 +1,6 @@
 import Cocoa
 
-public final class MenuBarItemAccessibilityElement: AccessibilityElement {
+public final class MenuBarItemAccessibilityElement: AccessibilityElement, @unchecked Sendable {
   public enum Action {
    case pick
     var rawValue: String {

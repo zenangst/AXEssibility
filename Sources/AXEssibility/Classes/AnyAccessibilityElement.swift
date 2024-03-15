@@ -1,6 +1,6 @@
 import Cocoa
 
-public final class AnyAccessibilityElement: AccessibilityElement {
+public final class AnyAccessibilityElement: AccessibilityElement, @unchecked Sendable {
   public enum Action {
     case raise
     case showMenu

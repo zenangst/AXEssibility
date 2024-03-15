@@ -1,6 +1,6 @@
 import Cocoa
 
-public protocol AccessibilityElement: AnyObject {
+public protocol AccessibilityElement: AnyObject, Sendable {
   var reference: AXUIElement { get }
   var messagingTimeout: Float? { get }
 
