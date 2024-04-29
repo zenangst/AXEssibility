@@ -2,7 +2,7 @@ import Cocoa
 
 private let kAXFullscreenAttribute = "AXFullScreen"
 
-public final class WindowAccessibilityElement: AccessibilityElement {
+public final class WindowAccessibilityElement: AccessibilityElement, @unchecked Sendable {
   public enum Action {
     case raise
     case showMenu

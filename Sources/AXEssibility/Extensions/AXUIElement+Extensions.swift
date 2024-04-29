@@ -1,6 +1,6 @@
 import Cocoa
 
-extension AXUIElement {
+extension AXUIElement: @unchecked Sendable {
   internal func rawValue(for attribute: NSAccessibility.Attribute) throws -> Any? {
     try rawValue(for: attribute.rawValue)
   }

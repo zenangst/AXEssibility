@@ -1,6 +1,6 @@
 import Cocoa
 
-public final class MenuBarAccessibilityElement: AccessibilityElement {
+public final class MenuBarAccessibilityElement: AccessibilityElement, @unchecked Sendable {
   public private(set) var reference: AXUIElement
   public let messagingTimeout: Float?
 

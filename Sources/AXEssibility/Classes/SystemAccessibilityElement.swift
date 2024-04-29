@@ -1,7 +1,6 @@
 import Cocoa
 
-public final class SystemAccessibilityElement: AccessibilityElement {
-  
+public final class SystemAccessibilityElement: AccessibilityElement, @unchecked Sendable {
   public private(set) var reference: AXUIElement
   public let messagingTimeout: Float?
 
