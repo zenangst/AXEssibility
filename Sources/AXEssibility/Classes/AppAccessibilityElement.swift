@@ -1,7 +1,22 @@
+import AppKit
 import Foundation
 import Cocoa
 
 public final class AppAccessibilityElement: AccessibilityElement, @unchecked Sendable {
+  public enum Notification: String {
+    case closed
+    case focusedWindowChanged
+    case windowCreated
+
+    public var rawValue: String {
+      switch self {
+      case .windowCreated:        kAXWindowCreatedNotification
+      case .focusedWindowChanged: kAXFocusedWindowChangedNotification
+      case .closed:               kAXUIElementDestroyedNotification
+      }
+    }
+  }
+
   public private(set) var reference: AXUIElement
   public let messagingTimeout: Float?
 
@@ -75,6 +90,21 @@ public final class AppAccessibilityElement: AccessibilityElement, @unchecked Sen
     error = AXUIElementGetPid(reference, &pid)
     try error.checkThrowing()
     return pid
+  }
+
+  public func observe(_ notification: Notification, id: UUID, pointer: UnsafeMutableRawPointer? = nil, callback: AXObserverCallback) -> ApplicationAccessibilityObserver? {
+    guard let pid, let observation = ApplicationAccessibilityObserver.observe(
+      pid,
+      id: id,
+      element: reference,
+      notification: notification,
+      pointer: pointer,
+      callback: callback
+    ) else {
+      return nil
+    }
+
+    return observation
   }
 
   // MARK: Private methods
