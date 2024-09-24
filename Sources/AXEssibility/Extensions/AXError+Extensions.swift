@@ -1,6 +1,6 @@
 import Cocoa
 
-extension AXError: Error {}
+extension AXError: @retroactive Error {}
 
 internal extension AXError {
   func checkThrowing() throws {
