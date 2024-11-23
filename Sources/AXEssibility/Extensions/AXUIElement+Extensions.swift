@@ -1,6 +1,6 @@
 import Cocoa
 
-extension AXUIElement: @unchecked Sendable {
+extension AXUIElement: @unchecked @retroactive Sendable {
   internal func rawValue(for attribute: NSAccessibility.Attribute) throws -> Any? {
     try rawValue(for: attribute.rawValue)
   }
