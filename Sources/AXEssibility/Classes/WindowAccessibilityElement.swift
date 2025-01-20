@@ -55,7 +55,19 @@ public final class WindowAccessibilityElement: AccessibilityElement, @unchecked 
       AXUIElementSetAttributeValue(
         reference,
         kAXMinimizedAttribute as CFString,
-        newValue as CFTypeRef
+        packAXValue(newValue)
+      )
+    }
+  }
+
+  public var main: Bool? {
+    get { try? value(.main) }
+    set {
+      guard let newValue else { return  }
+      AXUIElementSetAttributeValue(
+        reference,
+        kAXMainAttribute as CFString,
+        packAXValue(newValue)
       )
     }
   }

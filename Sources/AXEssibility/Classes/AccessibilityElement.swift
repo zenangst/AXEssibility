@@ -57,6 +57,17 @@ extension AccessibilityElement {
     throw AccessibilityElementError.failedToCastAnyValue
   }
 
+  internal func packAXValue(_ value: Any) -> AnyObject {
+    switch value {
+    case let newValue as Bool: newValue as CFBoolean
+    case var newValue as CFRange: AXValueCreate(AXValueType(rawValue: kAXValueCFRangeType)!, &newValue)!
+    case var newValue as CGPoint: AXValueCreate(AXValueType(rawValue: kAXValueCGPointType)!, &newValue)!
+    case var newValue as CGRect:  AXValueCreate(AXValueType(rawValue: kAXValueCGRectType)!, &newValue)!
+    case var newValue as CGSize: AXValueCreate(AXValueType(rawValue: kAXValueCGSizeType)!, &newValue)!
+    default: value as AnyObject
+    }
+  }
+
   public func values(_ attributes: [NSAccessibility.Attribute]) throws -> [NSAccessibility.Attribute: Any] {
     let uniqueAttributes = Array(Set(attributes))
     let cfAttributes = (uniqueAttributes.map { $0.rawValue as CFString }) as CFArray
@@ -130,14 +141,8 @@ extension AccessibilityElement {
     }
     set {
       guard let newValue else { return }
-      let newFrame = CGRect(origin: newValue.origin, size: newValue.size)
-
-      if let value = AXValue.from(value: newFrame.origin, type: .cgPoint) {
-        AXUIElementSetAttributeValue(reference, kAXPositionAttribute as CFString, value)
-      }
-      if let value = AXValue.from(value: newFrame.size, type: .cgSize) {
-        AXUIElementSetAttributeValue(reference, kAXSizeAttribute as CFString, value)
-      }
+      AXUIElementSetAttributeValue(reference, kAXPositionAttribute as CFString, packAXValue(newValue.origin))
+      AXUIElementSetAttributeValue(reference, kAXSizeAttribute as CFString, packAXValue(newValue.size))
     }
   }
 
