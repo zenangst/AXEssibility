@@ -7,6 +7,8 @@ extension WindowAccessibilityElement: CustomDebugStringConvertible {
 WindowAccessibilityElement
     .id: \(debugValue(id))
     .title: \(debugValue(title))
+    .role: \(debugValue(role))
+    .subrole: \(debugValue(subrole))
     .isFocused: \(debugValue(isFocused))
     .isMinimized: \(debugValue(isMinimized))
     .isFullscreen: \(debugValue(isFullscreen))

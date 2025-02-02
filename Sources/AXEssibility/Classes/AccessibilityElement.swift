@@ -4,7 +4,7 @@ public protocol AccessibilityElement: AnyObject, Sendable {
   var reference: AXUIElement { get }
   var messagingTimeout: Float? { get }
 
-  init(_ reference: AXUIElement, messagingTimeout: Float?)
+  init?(_ reference: AXUIElement, messagingTimeout: Float?)
 }
 
 extension AccessibilityElement {
@@ -94,7 +94,7 @@ extension AccessibilityElement {
     return result
   }
 
-  public func element<Element: AccessibilityElement>(for attribute: NSAccessibility.Attribute, messagingTimeout: Float? = nil) throws -> Element {
+  public func element<Element: AccessibilityElement>(for attribute: NSAccessibility.Attribute, messagingTimeout: Float? = nil) throws -> Element? {
     guard let rawValue = try reference.rawValue(for: attribute) else {
       throw AccessibilityElementError.unableToCreateRawValue
     }

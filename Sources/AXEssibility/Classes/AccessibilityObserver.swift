@@ -1,7 +1,7 @@
 import AppKit
 import ApplicationServices
 
-public final class ApplicationAccessibilityObserver: Identifiable {
+public final class AccessibilityObserver: Identifiable {
   public let id: UUID
   public let element: AXUIElement
   public let notification: AppAccessibilityElement.Notification
@@ -34,9 +34,9 @@ public final class ApplicationAccessibilityObserver: Identifiable {
   }
 
   static func observe(_ pid: pid_t, id: UUID, element: AXUIElement, notification: AppAccessibilityElement.Notification,
-                      pointer: UnsafeMutableRawPointer? = nil, callback: AXObserverCallback) -> ApplicationAccessibilityObserver? {
+                      pointer: UnsafeMutableRawPointer? = nil, callback: AXObserverCallback) -> AccessibilityObserver? {
     guard let runningApplication = NSRunningApplication(processIdentifier: pid),
-      let applicationAccessibilityObserver = ApplicationAccessibilityObserver(
+      let applicationAccessibilityObserver = AccessibilityObserver(
       runningApplication,
       id: id,
       element: element,
@@ -46,11 +46,12 @@ public final class ApplicationAccessibilityObserver: Identifiable {
     for _ in 0 ... 1 {
       if AXObserverAddNotification(observer, element, notification.rawValue as CFString, pointer) == .success {
         CFRunLoopAddSource(CFRunLoopGetCurrent(), AXObserverGetRunLoopSource(observer), .defaultMode)
-        return ApplicationAccessibilityObserver(
+        return AccessibilityObserver(
           runningApplication,
           id: applicationAccessibilityObserver.id,
           observer: observer,
-          element: element, notification: notification)
+          element: element,
+          notification: notification)
       }
     }
 
