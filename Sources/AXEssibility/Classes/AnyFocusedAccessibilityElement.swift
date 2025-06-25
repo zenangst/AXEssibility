@@ -13,4 +13,12 @@ public final class AnyFocusedAccessibilityElement: AccessibilityElement, @unchec
   public func selectedText() -> String? {
     try? value(.selectedText)
   }
+
+  public func setSelectedText(_ newValue: String) {
+    AXUIElementSetAttributeValue(
+      reference,
+      kAXSelectedTextAttribute as CFString,
+      packAXValue(newValue)
+    )
+  }
 }
