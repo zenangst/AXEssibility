@@ -39,3 +39,4 @@ xcuserdata/
 *.xcodeproj
 *.xcworkspace
 Derived
+build

@@ -1,6 +1,6 @@
 import AppKit
-import Foundation
 import Cocoa
+import Foundation
 
 public final class AppAccessibilityElement: AccessibilityElement, @unchecked Sendable {
   public enum Notification: String {
@@ -10,9 +10,9 @@ public final class AppAccessibilityElement: AccessibilityElement, @unchecked Sen
 
     public var rawValue: String {
       switch self {
-      case .windowCreated:        kAXWindowCreatedNotification
+      case .windowCreated: kAXWindowCreatedNotification
       case .focusedWindowChanged: kAXFocusedWindowChangedNotification
-      case .closed:               kAXUIElementDestroyedNotification
+      case .closed: kAXUIElementDestroyedNotification
       }
     }
   }
@@ -29,19 +29,13 @@ public final class AppAccessibilityElement: AccessibilityElement, @unchecked Sen
     }
   }
 
-  public var pid: Int32? {
-    get { try? self.getPid() }
-  }
+  public var pid: Int32? { try? getPid() }
 
-  public var title: String? {
-    get { try? value(.title) }
-  }
+  public var title: String? { try? value(.title) }
 
   public var isFrontmost: Bool? {
-    get {
-      let intValue = try? value(.frontmost, as: Int.self)
-      return intValue != 0 ? true : false
-    }
+    let intValue = try? value(.frontmost, as: Int.self)
+    return intValue != 0 ? true : false
   }
 
   public func mainWindow() throws -> WindowAccessibilityElement? {
@@ -61,9 +55,19 @@ public final class AppAccessibilityElement: AccessibilityElement, @unchecked Sen
     try getMenubar(for: .menuBar)
   }
 
-  public func windows() throws -> [WindowAccessibilityElement] {
+  public func windows(_ filter: ((WindowAccessibilityElement) -> Bool)? = nil) throws -> [WindowAccessibilityElement] {
     try value(.windows, as: [AXUIElement].self)
-      .compactMap { WindowAccessibilityElement.init($0, messagingTimeout: messagingTimeout) }
+      .compactMap { axElement in
+        guard let element = WindowAccessibilityElement(axElement, messagingTimeout: messagingTimeout) else {
+          return nil
+        }
+
+        if let filter, !filter(element) {
+          return nil
+        }
+
+        return element
+      }
   }
 
   public init(_ reference: AXUIElement, messagingTimeout: Float? = nil) {
@@ -72,7 +76,7 @@ public final class AppAccessibilityElement: AccessibilityElement, @unchecked Sen
   }
 
   public init(_ pid: pid_t, messagingTimeout: Float? = nil) {
-    self.reference = AXUIElementCreateApplication(pid)
+    reference = AXUIElementCreateApplication(pid)
     self.messagingTimeout = messagingTimeout
     setMessagingTimeoutIfNeeded(for: reference)
   }
@@ -90,6 +94,18 @@ public final class AppAccessibilityElement: AccessibilityElement, @unchecked Sen
     error = AXUIElementGetPid(reference, &pid)
     try error.checkThrowing()
     return pid
+  }
+
+  public var hidden: Bool? {
+    get { try? value(.hidden) }
+    set {
+      guard let newValue else { return }
+      AXUIElementSetAttributeValue(
+        reference,
+        kAXHiddenAttribute as CFString,
+        packAXValue(newValue)
+      )
+    }
   }
 
   public func observe(_ notification: Notification, element: AXUIElement, id: UUID, pointer: UnsafeMutableRawPointer? = nil, callback: AXObserverCallback) -> AccessibilityObserver? {

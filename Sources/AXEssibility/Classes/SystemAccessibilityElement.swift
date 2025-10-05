@@ -10,13 +10,14 @@ public final class SystemAccessibilityElement: AccessibilityElement, @unchecked 
     setMessagingTimeoutIfNeeded(for: reference)
   }
 
-  public func focusedUIElement(_ messagingTimeout: Float? = nil) throws -> AnyFocusedAccessibilityElement {
+  public func focusedUIElement(_: Float? = nil) throws -> AnyFocusedAccessibilityElement {
     let element = try value(.focusedUIElement, as: AXUIElement.self)
     return AnyFocusedAccessibilityElement(element)
   }
 
-  public func element<T: AccessibilityElement>(at location: CGPoint, 
-                                               as: T.Type) -> T? {
+  public func element<T: AccessibilityElement>(at location: CGPoint,
+                                               as _: T.Type) -> T?
+  {
     var matchingReference: AXUIElement?
     AXUIElementCopyElementAtPosition(reference, Float(location.x), Float(location.y), &matchingReference)
     if let matchingReference {
@@ -24,5 +25,4 @@ public final class SystemAccessibilityElement: AccessibilityElement, @unchecked 
     }
     return nil
   }
-
 }
